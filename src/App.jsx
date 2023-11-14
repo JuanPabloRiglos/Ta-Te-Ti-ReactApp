@@ -6,10 +6,20 @@ import { WINNER_COMBOS } from './components/utils/logic';
 import './App.css'
 import { WinnerModal } from './components/WinnerModal';
 import confetti from "canvas-confetti"
+import { ResetBoton } from './components/ResetBotton';
+
 
 function App() {
-  const [board, setBoard] = useState(Array(9).fill(null));
-  const [turn, setTurn] = useState(TURNS.X);
+  const [board, setBoard] = useState(() => {
+    // chequeao si hay partida en el localStorage , si no lo hay, devuelvo la configuracion inicial
+    const boardInLS = window.localStorage.getItem('board');
+    return boardInLS ? JSON.parse(boardInLS) : Array(9).fill(null)
+  });
+
+  const [turn, setTurn] = useState(() => {
+    const turnInLs = window.localStorage.getItem('turn');
+    return turnInLs ? turnInLs : TURNS.X
+  });
   const [winner, setWinner] = useState(null)
 
   //checkea el tablero a ver si salio una de las jugadas ganadoras
@@ -22,7 +32,7 @@ function App() {
     }
     return null
   };
-
+  // checkea si el juego termino.
   const checkEnGame = (checkedBoard) => {
     return checkedBoard.every((square) => square != null)
   }
@@ -39,6 +49,10 @@ function App() {
     let newTurn = turn === TURNS.X ? TURNS.o : TURNS.X;
     setTurn(newTurn)
 
+    // guardar estado de la partida en LC
+    window.localStorage.setItem('board', JSON.stringify(board));
+    window.localStorage.setItem('turn', turn)
+
     const newWiner = checkWinner(newBoard);
     if (newWiner) {
       setWinner(newWiner)
@@ -51,13 +65,18 @@ function App() {
   const resStartGame = () => {
     setBoard(Array(9).fill(null));
     setTurn(TURNS.X);
-    setWinner(null)
+    setWinner(null);
+    window.localStorage.removeItem('board');
+    window.localStorage.removeItem('turn')
   }
 
   return (
     <>
       <main className='board'>
         <h1>Ta Te Ti</h1>
+
+        <ResetBoton resStartGame={resStartGame} />
+
         <section className='game'>
           {board.map((_, index) => {
             return (
